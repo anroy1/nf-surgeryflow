@@ -22,6 +22,9 @@ include {   TRACKING_LOCALTRACKING } from './modules/nf-neuro/tracking/localtrac
 // BUNDLESEG
 include { BUNDLE_SEG } from './subworkflows/nf-neuro/bundle_seg/main'
 
+// NII TO DICOM
+include { NII_TO_DICOM } from './subworkflows/local/nii_to_dicom/main'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -125,37 +128,6 @@ workflow {
     RECONST_DTIMETRICS( ch_dti_metrics )
 
     //
-    // MODULE: Run RECONST/FRF
-    //
-    ch_reconst_frf = PREPROC_DWI.out.dwi_resample
-        .join(PREPROC_DWI.out.bval)
-        .join(PREPROC_DWI.out.bvec)
-        .join(PREPROC_DWI.out.b0_mask)
-
-    RECONST_FRF( ch_reconst_frf )
-
-    /* Run fiber response averaging over subjects */
-    ch_fiber_response = RECONST_FRF.out.frf
-    if ( params.dwi_fodf_fit_use_average_frf ) {
-        RECONST_MEANFRF( RECONST_FRF.out.frf.map{ it[1] }.flatten() )
-        ch_fiber_response = RECONST_FRF.out.map{ it[0] }
-            .combine( RECONST_MEANFRF.out.meanfrf )
-    }
-
-    //
-    // MODULE: Run RECONST/FODF
-    //
-    ch_reconst_fodf = PREPROC_DWI.out.dwi_resample
-        .join(PREPROC_DWI.out.bval)
-        .join(PREPROC_DWI.out.bvec)
-        .join(PREPROC_DWI.out.b0_mask)
-        .join(RECONST_DTIMETRICS.out.fa)
-        .join(RECONST_DTIMETRICS.out.md)
-        .join(ch_fiber_response)
-    RECONST_FODF( ch_reconst_fodf )
-
-
-    //
     // SUBWORKFLOW: Run REGISTRATION
     //
     T1_REGISTRATION(
@@ -178,17 +150,55 @@ workflow {
 
     REGISTRATION_CONVERT( ch_convert )
 
-    /* SEGMENTATION */
-
     //
     // SUBWORKFLOW: Run ANATOMICAL_SEGMENTATION
     //
+
     ANATOMICAL_SEGMENTATION(
         T1_REGISTRATION.out.image_warped,   // channel: [ val(meta), [ image ] ]
             Channel.empty(),                // channel: [ val(meta), [ aparc_aseg, wmparc ] ], optional
             Channel.empty(),                // channel: [ val(meta), [ lesion ] ], optional
             ch_fs_license                   // channel: [ val[meta], [ fs_license ] ], optional
     )
+
+    //
+    // MODULE: Run RECONST/FRF
+    //
+    ch_reconst_frf = PREPROC_DWI.out.dwi_resample
+        .join(PREPROC_DWI.out.bval)
+        .join(PREPROC_DWI.out.bvec)
+        .join(PREPROC_DWI.out.b0_mask)
+        .join(ANATOMICAL_SEGMENTATION.out.wm_mask)
+        .join(ANATOMICAL_SEGMENTATION.out.gm_mask)
+        .join(ANATOMICAL_SEGMENTATION.out.csf_mask)
+
+    RECONST_FRF( ch_reconst_frf )
+
+    /* Run fiber response averaging over subjects */
+    ch_single_frf = RECONST_FRF.out.frf
+        .map{ it + [[], []] }
+
+    ch_fiber_response = RECONST_FRF.out.wm_frf
+        .join(RECONST_FRF.out.gm_frf)
+        .join(RECONST_FRF.out.csf_frf)
+        .mix(ch_single_frf)
+    if ( params.dwi_fodf_fit_use_average_frf ) {
+        RECONST_MEANFRF( RECONST_FRF.out.frf.map{ it[1] }.flatten() )
+        ch_fiber_response = RECONST_FRF.out.map{ it[0] }
+            .combine( RECONST_MEANFRF.out.meanfrf )
+    }
+
+    //
+    // MODULE: Run RECONST/FODF
+    //
+    ch_reconst_fodf = PREPROC_DWI.out.dwi_resample
+        .join(PREPROC_DWI.out.bval)
+        .join(PREPROC_DWI.out.bvec)
+        .join(PREPROC_DWI.out.b0_mask)
+        .join(RECONST_DTIMETRICS.out.fa)
+        .join(RECONST_DTIMETRICS.out.md)
+        .join(ch_fiber_response)
+    RECONST_FODF( ch_reconst_fodf )
 
     //
     // MODULE: Run TRACKING/PFTTRACKING
@@ -221,4 +231,13 @@ workflow {
     BUNDLE_SEG( 
         RECONST_DTIMETRICS.out.fa,  // channel: [ val(meta), [ fa ] ]
         ch_tractogram)              // channel: [ val(meta), [ tractogram ] ]
+
+    NII_TO_DICOM(
+        PREPROC_T1.out.t1_final,
+        REGISTRATION_CONVERT.out.affine_transform,
+        REGISTRATION_CONVERT.out.deform_transform,
+        BUNDLE_SEG.out.bundles,
+        Channel.empty()                                 // channel: [ val(meta), [ dicom ] ], optional
+
+    )
 }

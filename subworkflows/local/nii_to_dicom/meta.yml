@@ -1,0 +1,77 @@
+name: "nii_to_dicom"
+description: |
+  Subworkflow for converting NIfTI images to DICOM format. This workflow takes in various input channels including T1 native images,
+  affine transformations, warp fields, bundles, and DICOM templates. It processes these inputs through several stages including registration,
+  density map creation, voxel burning, and finally conversion to DICOM format.
+  -----------  Steps  -----------
+  Registration of Bundles (REGISTRATION_TRACTOGRAM).
+    Registers the input bundles to the T1 native space using affine and warp transformations.
+  Bundle Density Map Creation (BUNDLE_DENSITYMAP).
+    Creates density maps from the registered bundles.
+  Voxel Burning (IMAGE_BURNVOXELS).
+    Burns the density maps into the T1 native image.
+  NIfTI to DICOM Conversion (IO_NII2DCM).
+    Converts the processed NIfTI images to DICOM format using the provided DICOM templates.
+
+keywords:
+  - NIfTI
+  - DICOM
+  - registration
+  - density map
+  - voxel burning
+  - conversion
+
+components:
+  - registration/tractogram
+  - bundle/densitymap
+  - image/burnvoxels
+  - io/nii2dcm
+
+input:
+  - ch_t1_native:
+      type: file
+      description: |
+        The input channel containing the native T1 image.
+        Structure: [ val(meta), path(t1_native) ]
+      pattern: "*.{nii,nii.gz}"
+  - ch_affine:
+      type: file
+      description: |
+        The input channel containing the affine transformation (t1 to dwi).
+        Structure: [ val(meta), path(affine) ]
+      pattern: "*.{txt}"
+  - ch_warp:
+      type: file
+      description: |
+        The input channel containing the warp field (t1 to dwi).
+        Structure: [ val(meta), path(warp) ]
+      pattern: "*.{nii,nii.gz}"
+  - ch_bundles:
+      type: file
+      description: |
+        The input channel containing the bundles.
+        Structure: [ val(meta), path(bundles) ]
+      pattern: "*.{trk}"
+  - ch_dicom:
+      type: file
+      description: |
+        The input channel containing the DICOM templates.
+        Structure: [ val(meta), path(dicom) ]
+      pattern: "*.{dcm}"
+
+output:
+  - dicom:
+      type: file
+      description: |
+        Channel containing the final DICOM directory.
+        Structure: [ val(meta), path(dicom_directory) ]
+      pattern: "*.{dcm}"
+  - versions:
+      type: file
+      description: |
+        File containing software versions.
+        Structure: [ path(versions.yml) ]
+      pattern: "versions.yml"
+
+authors:
+  - "@GuillaumeTh"
