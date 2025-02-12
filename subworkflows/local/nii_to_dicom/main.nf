@@ -1,5 +1,5 @@
 include { REGISTRATION_TRACTOGRAM } from '../../../modules/nf-neuro/registration/tractogram/main'
-include { BUNDLE_DENSITYMAP } from '../../../modules/nf-neuro/bundle/densitymap/main'
+include { BUNDLE_DENSITYMAP } from '../../../modules/nf-neuro/tractogram/densitymap/main'
 include { IMAGE_BURNVOXELS } from '../../../modules/nf-neuro/image/burnvoxels/main'
 include { IO_NII2DCM } from '../../../modules/nf-neuro/io/nii2dcm/main'
 
