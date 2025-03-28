@@ -27,7 +27,7 @@
         ".venv",
         ".nextflow",
         "node_modules",
-        ".tests/runs"
+        "tests/.runs"
     ],
     "cSpell.ignorePaths": [
         "package-lock.json",
@@ -39,7 +39,6 @@
         ".venv",
         "tests/.runs"
     ],
-    "cSpell.words": [
-        "subworkflows"
-    ]
+    "nextflow.formatting.harshilAlignment": true,
+    "nextflow.debug": true
 }
