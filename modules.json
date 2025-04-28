@@ -13,7 +13,7 @@
           "betcrop/fslbetcrop": {
             "branch": "main",
             "git_sha": "ab9e5404528545237c63c5d887b5a54079529b01",
-            "installed_by": ["preproc_dwi"]
+            "installed_by": ["preproc_dwi", "topup_eddy"]
           },
           "betcrop/synthbet": {
             "branch": "main",
@@ -64,6 +64,11 @@
             "branch": "main",
             "git_sha": "9b1c19bd5073aec628e4b9fe11bfc7510e038e09",
             "installed_by": ["topup_eddy"]
+          },
+          "preproc/gibbs": {
+            "branch": "main",
+            "git_sha": "6b380f7a9c594b71a4ee713b510ee38b2e40677b",
+            "installed_by": ["preproc_dwi"]
           },
           "preproc/n4": {
             "branch": "main",

@@ -131,8 +131,8 @@ workflow {
     inputs = get_data()
 
     /* Load bet template */
-    ch_bet_template = params.run_synthbet ? Channel.empty() : Channel.fromPath(params.t1_bet_template_t1, checkIfExists: true)
-    ch_bet_probability = params.run_synthbet ? Channel.empty() : Channel.fromPath(params.t1_bet_template_probability_map, checkIfExists: true)
+    ch_bet_template = params.preproc_t1_run_synthbet ? Channel.empty() : Channel.fromPath(params.t1_bet_template_t1, checkIfExists: true)
+    ch_bet_probability = params.preproc_t1_run_synthbet ? Channel.empty() : Channel.fromPath(params.t1_bet_template_probability_map, checkIfExists: true)
 
     // ** Fetch license file ** //
     ch_fs_license = params.fs_license
@@ -173,7 +173,7 @@ workflow {
     // MODULE: Run RECONST_DTIMETRICS
     //
 
-    ch_dti_metrics = PREPROC_DWI.out.dwi_resample
+    ch_dti_metrics = PREPROC_DWI.out.dwi
         .join(PREPROC_DWI.out.bval)
         .join(PREPROC_DWI.out.bvec)
         .join(PREPROC_DWI.out.b0_mask)
@@ -195,13 +195,17 @@ workflow {
     //
     // MODULE: Run REGISTRATION_CONVERT
     //
-    ch_convert = T1_REGISTRATION.out.transfo_image
-        .join(PREPROC_T1.out.t1_final)
-        .join(PREPROC_DWI.out.b0, remainder: true)
-        .map{ it[0..3] + [it[4] ?: []] }
-        .combine(ch_fs_license)
+    if ( params.run_synthmorph) {
+        
+        ch_convert = T1_REGISTRATION.out.transfo_image
+            .join(PREPROC_T1.out.t1_final)
+            .join(PREPROC_DWI.out.b0, remainder: true)
+            .map{ it[0..3] + [it[4] ?: []] }
+            .combine(ch_fs_license)
 
-    REGISTRATION_CONVERT( ch_convert )
+        REGISTRATION_CONVERT( ch_convert )
+
+        } //Conversion is required only for synthmorph
 
 
     /* SEGMENTATION */
@@ -219,7 +223,7 @@ workflow {
     //
     // MODULE: Run RECONST/FRF
     //
-    ch_reconst_frf = PREPROC_DWI.out.dwi_resample
+    ch_reconst_frf = PREPROC_DWI.out.dwi
         .join(PREPROC_DWI.out.bval)
         .join(PREPROC_DWI.out.bvec)
         .join(PREPROC_DWI.out.b0_mask)
@@ -246,7 +250,7 @@ workflow {
     //
     // MODULE: Run RECONST/FODF
     //
-    ch_reconst_fodf = PREPROC_DWI.out.dwi_resample
+    ch_reconst_fodf = PREPROC_DWI.out.dwi
         .join(PREPROC_DWI.out.bval)
         .join(PREPROC_DWI.out.bvec)
         .join(PREPROC_DWI.out.b0_mask)
