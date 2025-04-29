@@ -315,3 +315,7 @@ workflow {
             Channel.empty()                                 // channel: [ val(meta), [ dicom ] ], optional
         )
     }
+/* END OF WORKFLOW */
+}
+
+
