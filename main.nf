@@ -71,7 +71,10 @@ workflow get_data {
             log.info "                               ├-- *topup_config.cnf  (optional)"
             log.info "                               └-- *lesion.nii.gz     (optional)"
             log.info ""
-            log.info "        --atlas=/path/to/[atlas]             Input Atlas directory"
+            log.info "        --atlas=/path/to/[atlas]                          Input Atlas directory"
+            log.info "        --fs_license=/path/to/[fs_license]                Freesurfer license file"
+            log.info ""
+            log.info "        **nf-surgeryflow is still a WIP. We recommend using only with --profile docker for now.**"
             log.info ""
             error "Please resubmit your command with the previous file structure."
         }
