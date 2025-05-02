@@ -71,7 +71,10 @@ workflow get_data {
             log.info "                               ├-- *topup_config.cnf  (optional)"
             log.info "                               └-- *lesion.nii.gz     (optional)"
             log.info ""
-            log.info "        --atlas=/path/to/[atlas]             Input Atlas directory"
+            log.info "        --atlas=/path/to/[atlas]                          Input Atlas directory"
+            log.info "        --fs_license=/path/to/[fs_license]                Freesurfer license file"
+            log.info ""
+            log.info "        **nf-surgeryflow is still a WIP. We recommend using only with --profile docker for now.**"
             log.info ""
             error "Please resubmit your command with the previous file structure."
         }
@@ -203,7 +206,7 @@ workflow {
             .map{ it[0..3] + [it[4] ?: []] }
             .combine(ch_fs_license)
 
-        REGISTRATION_CONVERT( ch_convert )
+        REGISTRATION_CONVERT(ch_convert)
 
         } //Conversion is required only for synthmorph
 
@@ -259,6 +262,10 @@ workflow {
         .join(ch_fiber_response)
     RECONST_FODF( ch_reconst_fodf )
 
+    /* TRACKING */
+
+    if ( params.run_local_tracking && params.run_pft ) { error "SurgeryFlow doesn't support running both tracking methods at the moment. Please, select only run_local_tracking or run_pft_tracking" }
+    
     // Initialize empty tractogram channel
     ch_tractogram = Channel.empty()
 
@@ -299,14 +306,19 @@ workflow {
         RECONST_DTIMETRICS.out.fa,  // channel: [ val(meta), [ fa ] ]
         ch_tractogram)              // channel: [ val(meta), [ tractogram ] ]
 
-    /* Nifti to DICOM conversion */
+    /* NIFTI TO DICOM CONVERSION */
 
-    NII_TO_DICOM(
-        PREPROC_T1.out.t1_final,
-        REGISTRATION_CONVERT.out.affine_transform,      // channel: [ val(meta), [ affine ] ]
-        REGISTRATION_CONVERT.out.deform_transform,      // channel: [ val(meta), [ deform ] ]
-        BUNDLE_SEG.out.bundles,                         // channel: [ val(meta), [ bundles ] ]
-        Channel.empty()                                 // channel: [ val(meta), [ dicom ] ], optional
+    if ( params.run_nii_to_dicom ) {
 
-    )
+        NII_TO_DICOM(
+            PREPROC_T1.out.t1_final,
+            REGISTRATION_CONVERT.out.affine_transform,      // channel: [ val(meta), [ affine ] ]
+            REGISTRATION_CONVERT.out.deform_transform,      // channel: [ val(meta), [ deform ] ]
+            BUNDLE_SEG.out.bundles,                         // channel: [ val(meta), [ bundles ] ]
+            Channel.empty()                                 // channel: [ val(meta), [ dicom ] ], optional
+        )
+    }
+/* END OF WORKFLOW */
 }
+
+
