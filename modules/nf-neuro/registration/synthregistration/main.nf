@@ -2,7 +2,7 @@ process REGISTRATION_SYNTHREGISTRATION {
     tag "$meta.id"
     label 'process_high'
 
-    container "freesurfer/synthmorph:4"
+    container "freesurfer/synthmorph:2"
     containerOptions {
         (workflow.containerEngine == 'docker') ? '--entrypoint "" --env PYTHONPATH="/freesurfer/env/lib/python3.11/site-packages"' : "--env PYTHONPATH='/freesurfer/env/lib/python3.11/site-packages'"
     }
