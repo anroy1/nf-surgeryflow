@@ -42,6 +42,28 @@ This pipeline is still under developpement, therefore has not been tested under 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow.
 
+### Input specification
+
+For complete usage instructions, please see the [documentation](/docs/usage.md). **nf-pediatric** aligns with the [BIDS](https://bids-specification.readthedocs.io/en/stable/) specification. To promote the use of standardized data formats and structures, **nf-pediatric** requires a BIDS-compliant folder as its input directories. We encourage users to validate their BIDS layout using the [bids-validator tool](https://hub.docker.com/r/bids/validator). The following example provides a BIDS structure for pediatric data (not infant) containg an acquisition with a reverse phase-encoded B0 image.
+
+```bash
+             "        --input=/path/to/[input]             Input directory containing your subjects"
+             ""
+             "                         [input]"
+             "                           ├-- S1"
+             "                           |   ├-- *dwi.nii.gz"
+             "                           |   ├-- *dwi.bval"
+             "                           |   ├-- *dwi.bvec"
+             "                           |   ├-- *t1.nii.gz"
+             "                           |   └-- *lesion.nii.gz     (optional)"
+             "                           └-- S2"
+             "                               ├-- *dwi.nii.gz"
+             "                               ├-- *dwi.bval"
+             "                               ├-- *dwi.bvec"
+             "                               ├-- *t1.nii.gz"
+             "                               └-- *lesion.nii.gz     (optional)"
+```
+
 **Configurations profiles**
 
 1. `-profile docker`: Each process will be run using docker containers.
