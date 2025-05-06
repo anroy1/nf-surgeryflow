@@ -191,20 +191,20 @@ workflow {
         Channel.empty()                 // channel: [ val(meta), [ ref_segmentation ] ], optional
     )
 
-    //
-    // MODULE: Run REGISTRATION_CONVERT
-    //
-    if ( params.run_synthmorph) {
+    // //
+    // // MODULE: Run REGISTRATION_CONVERT
+    // //
+    // if ( params.run_synthmorph) {
         
-        ch_convert = T1_REGISTRATION.out.transfo_image
-            .join(PREPROC_T1.out.t1_final)
-            .join(PREPROC_DWI.out.b0, remainder: true)
-            .map{ it[0..3] + [it[4] ?: []] }
-            .combine(ch_fs_license)
+    //     ch_convert = T1_REGISTRATION.out.transfo_image
+    //         .join(PREPROC_T1.out.t1_final)
+    //         .join(PREPROC_DWI.out.b0, remainder: true)
+    //         .map{ it[0..3] + [it[4] ?: []] }
+    //         .combine(ch_fs_license)
 
-        REGISTRATION_CONVERT(ch_convert)
+    //     REGISTRATION_CONVERT(ch_convert)
 
-        } //Conversion is required only for synthmorph
+    //     } //Conversion is required only for synthmorph
 
 
     /* SEGMENTATION */
@@ -304,16 +304,16 @@ workflow {
 
     /* NIFTI TO DICOM CONVERSION */
 
-    if ( params.run_nii_to_dicom ) {
+    // if ( params.run_nii_to_dicom ) {
 
-        NII_TO_DICOM(
-            PREPROC_T1.out.t1_final,
-            REGISTRATION_CONVERT.out.affine_transform,      // channel: [ val(meta), [ affine ] ]
-            REGISTRATION_CONVERT.out.deform_transform,      // channel: [ val(meta), [ deform ] ]
-            BUNDLE_SEG.out.bundles,                         // channel: [ val(meta), [ bundles ] ]
-            Channel.empty()                                 // channel: [ val(meta), [ dicom ] ], optional
-        )
-    }
+    //     NII_TO_DICOM(
+    //         PREPROC_T1.out.t1_final,
+    //         REGISTRATION_CONVERT.out.affine_transform,      // channel: [ val(meta), [ affine ] ]
+    //         REGISTRATION_CONVERT.out.deform_transform,      // channel: [ val(meta), [ deform ] ]
+    //         BUNDLE_SEG.out.bundles,                         // channel: [ val(meta), [ bundles ] ]
+    //         Channel.empty()                                 // channel: [ val(meta), [ dicom ] ], optional
+    //     )
+    // }
 /* END OF WORKFLOW */
 }
 

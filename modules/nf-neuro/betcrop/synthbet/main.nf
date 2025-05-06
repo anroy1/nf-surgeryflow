@@ -2,7 +2,10 @@ process BETCROP_SYNTHBET {
     tag "$meta.id"
     label 'process_single'
 
-    container "freesurfer/freesurfer:7.4.1"
+    container "freesurfer/synthstrip:1.6"
+    containerOptions {
+        (workflow.containerEngine == 'docker') ? '--entrypoint "" --env PYTHONPATH="/freesurfer/env/lib/python3.11/site-packages"' : "--env PYTHONPATH='/freesurfer/env/lib/python3.11/site-packages'"
+    }
 
     input:
     tuple val(meta), path(image), path(weights) /* optional, input = [] */
@@ -28,11 +31,11 @@ process BETCROP_SYNTHBET {
     export OMP_NUM_THREADS=1
     export OPENBLAS_NUM_THREADS=1
 
-    mri_synthstrip -i $image --out ${prefix}__bet_image.nii.gz --mask ${prefix}__brain_mask.nii.gz $gpu $border $nocsf $model
+    mri_synthstrip --image $image --out ${prefix}__bet_image.nii.gz --mask ${prefix}__brain_mask.nii.gz $gpu $border $nocsf $model
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        Freesurfer: \$(mri_convert -version | grep "freesurfer" | sed -E 's/.* ([0-9]+\\.[0-9]+\\.[0-9]+).*/\\1/')
+        Freesurfer/synthstrip:1.6
     END_VERSIONS
     """
 
@@ -45,7 +48,7 @@ process BETCROP_SYNTHBET {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        Freesurfer: \$(mri_convert -version | grep "freesurfer" | sed -E 's/.* ([0-9]+\\.[0-9]+\\.[0-9]+).*/\\1/')
+        Freesurfer/synthstrip:1.6
     END_VERSIONS
 
     function handle_code () {
