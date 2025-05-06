@@ -47,31 +47,31 @@ workflow get_data {
             log.info "                           |   ├-- *dwi.bval"
             log.info "                           |   ├-- *dwi.bvec"
             log.info "                           |   ├-- *t1.nii.gz"
-            // log.info "                           |   ├-- *sbref.nii.gz      (optional)"
-            // log.info "                           |   ├-- *rev_dwi.nii.gz    (optional)"
-            // log.info "                           |   ├-- *rev_dwi.bval      (optional)"
-            // log.info "                           |   ├-- *rev_dwi.bvec      (optional)"
-            // log.info "                           |   ├-- *rev_sbref.nii.gz  (optional)"
-            // log.info "                           |   ├-- *wmparc.nii.gz     (optional)"
-            // log.info "                           |   ├-- *aparc_aseg.nii.gz (optional)"
-            // log.info "                           |   ├-- *topup_config.cnf  (optional)"
+            log.info "                           |   ├-- *b0.nii.gz         (optional)"
+            log.info "                           |   ├-- *rev_dwi.nii.gz    (optional)"
+            log.info "                           |   ├-- *rev_dwi.bval      (optional)"
+            log.info "                           |   ├-- *rev_dwi.bvec      (optional)"
+            log.info "                           |   ├-- *rev_b0.nii.gz     (optional)"
+            log.info "                           |   ├-- *wmparc.nii.gz     (optional)"
+            log.info "                           |   ├-- *aparc_aseg.nii.gz (optional)"
+            log.info "                           |   ├-- *topup_config.cnf  (optional)"
             log.info "                           |   └-- *lesion.nii.gz     (optional)"
             log.info "                           └-- S2"
             log.info "                               ├-- *dwi.nii.gz"
             log.info "                               ├-- *dwi.bval"
             log.info "                               ├-- *dwi.bvec"
             log.info "                               ├-- *t1.nii.gz"
-            // log.info "                               ├-- *sbref.nii.gz      (optional)"
-            // log.info "                               ├-- *rev_dwi.nii.gz    (optional)"
-            // log.info "                               ├-- *rev_dwi.bval      (optional)"
-            // log.info "                               ├-- *rev_dwi.bvec      (optional)"
-            // log.info "                               ├-- *rev_sbref.nii.gz  (optional)"
-            // log.info "                               ├-- *wmparc.nii.gz     (optional)"
-            // log.info "                               ├-- *aparc_aseg.nii.gz (optional)"
-            // log.info "                               ├-- *topup_config.cnf  (optional)"
+            log.info "                               ├-- *b0.nii.gz         (optional)"
+            log.info "                               ├-- *rev_dwi.nii.gz    (optional)"
+            log.info "                               ├-- *rev_dwi.bval      (optional)"
+            log.info "                               ├-- *rev_dwi.bvec      (optional)"
+            log.info "                               ├-- *rev_b0.nii.gz     (optional)"
+            log.info "                               ├-- *wmparc.nii.gz     (optional)"
+            log.info "                               ├-- *aparc_aseg.nii.gz (optional)"
+            log.info "                               ├-- *topup_config.cnf  (optional)"
             log.info "                               └-- *lesion.nii.gz     (optional)"
             log.info ""
-            log.info "        --atlas=/path/to/[atlas]                          Input Atlas directory"
+            log.info "        --atlas_directory=/path/to/[atlas]                Input Atlas directory   (optional)"
             log.info "        --fs_license=/path/to/[fs_license]                Freesurfer license file"
             log.info ""
             log.info "        **nf-surgeryflow is still a WIP. We recommend using only with --profile docker for now.**"
@@ -79,7 +79,6 @@ workflow get_data {
             error "Please resubmit your command with the previous file structure."
         }
         input = file(params.input)
-        atlas = file(params.atlas)
 
         // ** Loading all files. ** //
         dwi_channel = Channel.fromFilePairs("$input/**/*dwi.{nii.gz,bval,bvec}", size: 3, flat: true)
@@ -90,17 +89,17 @@ workflow get_data {
             { it.parent.name }
             .map{ sid, t1 -> [ [id: sid], t1 ] }
 
-        sbref_channel = Channel.fromFilePairs("$input/**/*sbref.nii.gz", size: 1, flat: true)
+        b0_channel = Channel.fromFilePairs("$input/**/*b0.nii.gz", size: 1, flat: true)
             { it.parent.name }
-            .map{ sid, sbref -> [ [id: sid], sbref ] }
+            .map{ sid, b0 -> [ [id: sid], b0 ] }
 
         rev_dwi_channel = Channel.fromFilePairs("$input/**/*rev_dwi.{nii.gz,bval,bvec}", size: 3, flat: true)
             { it.parent.name }
             .map{ sid, rev_bvals, rev_bvecs, rev_dwi -> [ [id: sid], rev_dwi, rev_bvals, rev_bvecs ] } // Reordering the inputs.
 
-        rev_sbref_channel = Channel.fromFilePairs("$input/**/*rev_sbref.nii.gz", size: 1, flat: true)
+        rev_b0_channel = Channel.fromFilePairs("$input/**/*rev_b0.nii.gz", size: 1, flat: true)
             { it.parent.name }
-            .map{ sid, rev_sbref -> [ [id: sid], rev_sbref ] }
+            .map{ sid, rev_b0 -> [ [id: sid], rev_b0 ] }
 
         aparc_aseg_channel = Channel.fromFilePairs("$input/**/*aparc_aseg.nii.gz", size: 1, flat: true)
             { it.parent.name }
@@ -115,19 +114,16 @@ workflow get_data {
         lesion_channel = Channel.fromFilePairs("$input/**/*lesion.nii.gz", size: 1, flat: true)
             { it.parent.name }
 
-        atlas_channel = Channel.fromPath("$atlas", type: 'dir')
-
-    emit: // Those three lines below define your named output, use those labels to select which file you want.
+    emit: // Those lines below define your named output, use those labels to select which file you want.
         dwi = dwi_channel
         t1 = t1_channel
-        sbref = sbref_channel
+        b0 = b0_channel
         rev_dwi = rev_dwi_channel
-        rev_sbref = rev_sbref_channel
+        rev_b0 = rev_b0_channel
         aparc_aseg = aparc_aseg_channel
         wmparc = wmparc_channel
         topup = topup_channel
         lesion = lesion_channel
-        atlas = atlas_channel
 }
 
 workflow {
@@ -150,8 +146,8 @@ workflow {
     PREPROC_DWI(
         inputs.dwi,         // channel: [ val(meta), dwi, bval, bvec ]
         inputs.rev_dwi,     // channel: [ val(meta), rev-dwi, bval, bvec ], optional
-        inputs.sbref,       // Channel: [ val(meta), b0 ], optional
-        inputs.rev_sbref,   // channel: [ val(meta), rev-b0 ], optional
+        inputs.b0,          // Channel: [ val(meta), b0 ], optional
+        inputs.rev_b0,      // channel: [ val(meta), rev-b0 ], optional
         inputs.topup        // channel: [ 'topup.cnf' ], optional
     )
 
@@ -195,20 +191,20 @@ workflow {
         Channel.empty()                 // channel: [ val(meta), [ ref_segmentation ] ], optional
     )
 
-    //
-    // MODULE: Run REGISTRATION_CONVERT
-    //
-    if ( params.run_synthmorph) {
+    // //
+    // // MODULE: Run REGISTRATION_CONVERT
+    // //
+    // if ( params.run_synthmorph) {
         
-        ch_convert = T1_REGISTRATION.out.transfo_image
-            .join(PREPROC_T1.out.t1_final)
-            .join(PREPROC_DWI.out.b0, remainder: true)
-            .map{ it[0..3] + [it[4] ?: []] }
-            .combine(ch_fs_license)
+    //     ch_convert = T1_REGISTRATION.out.transfo_image
+    //         .join(PREPROC_T1.out.t1_final)
+    //         .join(PREPROC_DWI.out.b0, remainder: true)
+    //         .map{ it[0..3] + [it[4] ?: []] }
+    //         .combine(ch_fs_license)
 
-        REGISTRATION_CONVERT(ch_convert)
+    //     REGISTRATION_CONVERT(ch_convert)
 
-        } //Conversion is required only for synthmorph
+    //     } //Conversion is required only for synthmorph
 
 
     /* SEGMENTATION */
@@ -244,7 +240,7 @@ workflow {
         .join(RECONST_FRF.out.gm_frf)
         .join(RECONST_FRF.out.csf_frf)
         .mix(ch_single_frf)
-    if ( params.dwi_fodf_fit_use_average_frf ) {
+    if ( params.run_mean_frf ) {
         RECONST_MEANFRF( RECONST_FRF.out.frf.map{ it[1] }.flatten() )
         ch_fiber_response = RECONST_FRF.out.map{ it[0] }
             .combine( RECONST_MEANFRF.out.meanfrf )
@@ -308,16 +304,16 @@ workflow {
 
     /* NIFTI TO DICOM CONVERSION */
 
-    if ( params.run_nii_to_dicom ) {
+    // if ( params.run_nii_to_dicom ) {
 
-        NII_TO_DICOM(
-            PREPROC_T1.out.t1_final,
-            REGISTRATION_CONVERT.out.affine_transform,      // channel: [ val(meta), [ affine ] ]
-            REGISTRATION_CONVERT.out.deform_transform,      // channel: [ val(meta), [ deform ] ]
-            BUNDLE_SEG.out.bundles,                         // channel: [ val(meta), [ bundles ] ]
-            Channel.empty()                                 // channel: [ val(meta), [ dicom ] ], optional
-        )
-    }
+    //     NII_TO_DICOM(
+    //         PREPROC_T1.out.t1_final,
+    //         REGISTRATION_CONVERT.out.affine_transform,      // channel: [ val(meta), [ affine ] ]
+    //         REGISTRATION_CONVERT.out.deform_transform,      // channel: [ val(meta), [ deform ] ]
+    //         BUNDLE_SEG.out.bundles,                         // channel: [ val(meta), [ bundles ] ]
+    //         Channel.empty()                                 // channel: [ val(meta), [ dicom ] ], optional
+    //     )
+    // }
 /* END OF WORKFLOW */
 }
 

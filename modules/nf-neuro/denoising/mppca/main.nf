@@ -5,7 +5,7 @@ process DENOISING_MPPCA {
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "https://scil.usherbrooke.ca/containers/scilus_latest.sif":
-        "scilus/scilus:latest"}"
+        "scilus/scilus:2.0.2"}"
 
     input:
     tuple val(meta), path(dwi), path(mask)
