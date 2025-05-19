@@ -194,6 +194,8 @@ workflow {
     // //
     // // MODULE: Run REGISTRATION_CONVERT
     // //
+
+    //FIXME: 
     // if ( params.run_synthmorph) {
         
     //     ch_convert = T1_REGISTRATION.out.transfo_image
