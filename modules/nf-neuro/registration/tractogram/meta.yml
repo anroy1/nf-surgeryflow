@@ -36,7 +36,7 @@ input:
   - ref:
       type: file
       description: Reference anatomy for tck/vtk/fib/dpy file support (.nii or .nii.gz) (optional)
-      pattern: "*.{tck,vtk,fib,dpy}"
+      pattern: "*.{nii,nii.gz}"
 
   - deformation:
       type: file
