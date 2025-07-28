@@ -1,0 +1,99 @@
+nf-surgeryflow Pipeline
+====================
+DESCRIPTION
+
+DESCRIPTION
+
+This pipeline processes diffusion and structural MRI data for surgical planning. Please note that this pipeline is still under development and may not be fully functional. 
+It is designed to work with the nf-surgeryflow repository, which contains the necessary scripts and configurations.
+Input data should be organized as described below. Optional files will be used if present.
+nf-surgeryflow supports multiple profiles for different processing configurations. For a complete list of profiles, see the README.md file.
+Run the nf-surgeryflow pipeline for processing neuroimaging data.
+
+USAGE
+
+nextflow run main.nf [OPTIONS]
+
+Example:
+
+nextflow run /path/to/nf-surgeryflow/main.nf \
+    --input /path/to/root \
+    -with-report \
+    -profile <standard,docker> \
+    --dti_max_shell_value <1500> \
+    --atlas_directory /path/to/atlas \
+    --fs_license /path/to/license.txt
+    -resume
+
+INPUT
+
+                    --input=/path/to/[root]             Input directory containing your subjects
+             
+                                      [root]
+                                        ├-- S1
+                                        |   ├-- *dwi.nii.gz
+                                        |   ├-- *dwi.bval
+                                        |   ├-- *dwi.bvec
+                                        |   ├-- *t1.nii.gz
+                                        |   ├-- *b0.nii.gz          (optional)
+                                        |   ├-- *rev_dwi.nii.gz     (optional)
+                                        |   ├-- *rev_dwi.bval       (optional)  
+                                        |   ├-- *rev_dwi.bvec       (optional)  
+                                        |   ├-- *rev_b0.nii.gz      (optional)    
+                                        |   └-- *lesion.nii.gz      (optional)
+                                        └-- S2
+                                            ├-- *dwi.nii.gz
+                                            ├-- *dwi.bval
+                                            ├-- *dwi.bvec
+                                            ├-- *t1.nii.gz
+                                            ├-- *b0.nii.gz          (optional)
+                                            ├-- *rev_dwi.nii.gz     (optional)
+                                            ├-- *rev_dwi.bval       (optional)  
+                                            ├-- *rev_dwi.bvec       (optional)  
+                                            ├-- *rev_b0.nii.gz      (optional) 
+                                            └-- *lesion.nii.gz      (optional)
+
+        --atlas_directory                 Path to atlas folder containing:
+                                                                                atlas/
+                                                                                    atlas/
+                                                                                        pop_average/
+                                                                                    centroids/
+                                                                                    mni_masked.nii.gz
+                                                                                config/
+                                                                                    config_fss_1.json
+                                                                                    config_fss_2.json
+                                                                                                                                                              
+        --fs_license=/path/to/license.txt  Path to FreeSurfer license file.
+        -profile                          Nextflow profile (e.g. <standard|tumour|wm|tractoflow>,use_gpu,<docker|apptainer>)
+        -with-report                      Generate execution report
+        -resume  
+
+OPTIONAL ARGUMENTS (default value)
+
+Processing profiles:
+    -standard                                   Standard processing profile for surgical evaluation (default) [WIP].
+                                                    - Local tracking: $run_local_tracking
+                                                    - Local tracking mask type: $local_tracking_mask_type
+                                                    - Local seeding mask type: $local_seeding_mask_type
+                                                    - FA seeding thresholding: $local_fa_seeding_mask_threshold
+                                                    - FA tracking thresholding: $local_fa_tracking_mask_threshold
+                                                    - Number of seeds: $local_nbr_seeds
+                                                    - Synthstrip no-csf (exclude csf from brain border): $run_synthstrip_no_csf
+    -tumour                                     Tumour processing profile for surgical evaluation.
+    -wm                                         White matter processing profile for surgical evaluation.
+    -tractoflow                                 Tractoflow processing profile for surgical evaluation.
+
+
+Diffusion modeling:
+    --dti_max_shell_value                       Maximum shell threshold to be consider as a DTI shell (b <= $dti_max_shell_value).
+                                                This is the default behaviour to select DTI shells.
+    --dti_shells                                Shells selected to compute the DTI metrics (generally b <= 1200).
+                                                Please write them between quotes e.g. (--dti_shells "0 300 1000").
+                                                If selected, it will overwrite max_dti_shell_value.
+
+    --fodf_min_fodf_shell_value                      Minimum shell threshold to be consider as a fODF shell (b >= $fodf_min_fodf_shell_value).
+                                                This is the default behaviour to select fODF shells.
+    --fodf_shells                               Shells selected to compute the fODF metrics (generally b >= 700).
+                                                Please write them between quotes e.g. (--fodf_shells "0 1000 2000").
+                                                If selected, it will overwrite min_fodf_shell_value.
+

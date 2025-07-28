@@ -191,24 +191,6 @@ workflow {
         Channel.empty()                 // channel: [ val(meta), [ ref_segmentation ] ], optional
     )
 
-    // //
-    // // MODULE: Run REGISTRATION_CONVERT
-    // //
-
-    //FIXME: 
-    // if ( params.run_synthmorph) {
-        
-    //     ch_convert = T1_REGISTRATION.out.transfo_image
-    //         .join(PREPROC_T1.out.t1_final)
-    //         .join(PREPROC_DWI.out.b0, remainder: true)
-    //         .map{ it[0..3] + [it[4] ?: []] }
-    //         .combine(ch_fs_license)
-
-    //     REGISTRATION_CONVERT(ch_convert)
-
-    //     } //Conversion is required only for synthmorph
-
-
     /* SEGMENTATION */
 
     //
@@ -262,7 +244,26 @@ workflow {
 
     /* TRACKING */
 
-    if ( params.run_local_tracking && params.run_pft ) { error "SurgeryFlow doesn't support running both tracking methods at the moment. Please, select only run_local_tracking or run_pft_tracking" }
+    // Check for mutually exclusive tracking methods
+    if (params.run_local_tracking && params.run_pft) {
+        exit 1, "SurgeryFlow doesn't support running both tracking methods at the moment. Please select either 'run_local_tracking' or 'run_pft'."
+    }
+
+    // Check profile compatibility with parameters
+    if (params.profile.contains('tractoflow')&& (params.run_synthbet || params.run_synthbet || params.run_synthseg)) {
+        exit 1, "The 'tractoflow' profile is incompatible with Freesurfer's synth tools."
+    }
+
+    if (params.profile.contains('standard') && params.profile.contains('tumour')) {
+        exit 1, "You have selected 'standard' and 'tumour' profile. Select only one profile to avoid conflicts."
+    }
+
+    if (params.profile.contains('use-gpu') && !params.run_local_tracking) {
+        log.warn "Warning: You have selected 'use-gpu' profile, GPU acceleration is only applied to local tracking."
+    }
+    if (params.profile.contains('wm') && (params.profile.contains('standard') || params.profile.contains('tumour'))) {
+        exit 1, "You have selected 'wm' profile, which is incompatible with 'standard' or 'tumour' profiles. 'Wm' uses white matter mask for seeding and seeding while 'standard' and 'tumour' profiles use FA thresholding mask for seeding and tracking."
+    }
     
     // Initialize empty tractogram channel
     ch_tractogram = Channel.empty()
@@ -278,7 +279,7 @@ workflow {
             .join(RECONST_FODF.out.fodf)
             .join(RECONST_DTIMETRICS.out.fa)
         TRACKING_PFTTRACKING( ch_pft_tracking )
-
+        
         ch_tractogram = TRACKING_PFTTRACKING.out.trk
     }
 
@@ -308,6 +309,23 @@ workflow {
 
     // if ( params.run_nii_to_dicom ) {
 
+    // //
+    // // MODULE: Run REGISTRATION_CONVERT
+    // //
+
+    //     FIXME: 
+    //     if ( params.run_synthmorph) {
+            
+    //         ch_convert = T1_REGISTRATION.out.transfo_image
+    //             .join(PREPROC_T1.out.t1_final)
+    //             .join(PREPROC_DWI.out.b0, remainder: true)
+    //             .map{ it[0..3] + [it[4] ?: []] }
+    //             .combine(ch_fs_license)
+
+    //         REGISTRATION_CONVERT(ch_convert)
+
+    //         } //Conversion is required only for synthmorph
+
     //     NII_TO_DICOM(
     //         PREPROC_T1.out.t1_final,
     //         REGISTRATION_CONVERT.out.affine_transform,      // channel: [ val(meta), [ affine ] ]
@@ -318,5 +336,3 @@ workflow {
     // }
 /* END OF WORKFLOW */
 }
-
-
