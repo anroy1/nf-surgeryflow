@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+import groovy.text.SimpleTemplateEngine
+
 //BIDS
 include {   IO_READBIDS                                               } from './modules/nf-neuro/io/readbids/main' 
 
@@ -28,6 +30,18 @@ include { BUNDLE_SEG } from './subworkflows/nf-neuro/bundle_seg/main'
 // NII TO DICOM
 include { NII_TO_DICOM } from './subworkflows/local/nii_to_dicom/main'
 
+def helpMessage() {
+    def usage_text = new File("${baseDir}/USAGE").text
+    def binding = [params: params]
+    def engine = new SimpleTemplateEngine()
+    return engine.createTemplate(usage_text).make(binding)
+}
+
+if ( params.help || !params.input) {
+    log.info helpMessage().toString
+    exit 0
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -36,48 +50,6 @@ include { NII_TO_DICOM } from './subworkflows/local/nii_to_dicom/main'
 
 workflow get_data {
     main:
-        if ( !params.input ) {
-            log.info "You must provide an input directory containing all images using:"
-            log.info ""
-            log.info "        --input=/path/to/[input]             Input directory containing your subjects"
-            log.info ""
-            log.info "                         [input]"
-            log.info "                           ├-- S1"
-            log.info "                           |   ├-- *dwi.nii.gz"
-            log.info "                           |   ├-- *dwi.bval"
-            log.info "                           |   ├-- *dwi.bvec"
-            log.info "                           |   ├-- *t1.nii.gz"
-            log.info "                           |   ├-- *b0.nii.gz         (optional)"
-            log.info "                           |   ├-- *rev_dwi.nii.gz    (optional)"
-            log.info "                           |   ├-- *rev_dwi.bval      (optional)"
-            log.info "                           |   ├-- *rev_dwi.bvec      (optional)"
-            log.info "                           |   ├-- *rev_b0.nii.gz     (optional)"
-            log.info "                           |   ├-- *wmparc.nii.gz     (optional)"
-            log.info "                           |   ├-- *aparc_aseg.nii.gz (optional)"
-            log.info "                           |   ├-- *topup_config.cnf  (optional)"
-            log.info "                           |   └-- *lesion.nii.gz     (optional)"
-            log.info "                           └-- S2"
-            log.info "                               ├-- *dwi.nii.gz"
-            log.info "                               ├-- *dwi.bval"
-            log.info "                               ├-- *dwi.bvec"
-            log.info "                               ├-- *t1.nii.gz"
-            log.info "                               ├-- *b0.nii.gz         (optional)"
-            log.info "                               ├-- *rev_dwi.nii.gz    (optional)"
-            log.info "                               ├-- *rev_dwi.bval      (optional)"
-            log.info "                               ├-- *rev_dwi.bvec      (optional)"
-            log.info "                               ├-- *rev_b0.nii.gz     (optional)"
-            log.info "                               ├-- *wmparc.nii.gz     (optional)"
-            log.info "                               ├-- *aparc_aseg.nii.gz (optional)"
-            log.info "                               ├-- *topup_config.cnf  (optional)"
-            log.info "                               └-- *lesion.nii.gz     (optional)"
-            log.info ""
-            log.info "        --atlas_directory=/path/to/[atlas]                Input Atlas directory   (optional)"
-            log.info "        --fs_license=/path/to/[fs_license]                Freesurfer license file"
-            log.info ""
-            log.info "        **nf-surgeryflow is still a WIP. We recommend using only with --profile docker for now.**"
-            log.info ""
-            error "Please resubmit your command with the previous file structure."
-        }
         input = file(params.input)
 
         // ** Loading all files. ** //
