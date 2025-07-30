@@ -36,7 +36,7 @@ INPUT
                                         |   ├-- *rev_dwi.bval       (optional)  
                                         |   ├-- *rev_dwi.bvec       (optional)  
                                         |   ├-- *rev_b0.nii.gz      (optional)    
-                                        |   └-- *lesion.nii.gz      (optional)
+                                        |   └-- *lesion.nii.gz      (optional) [WIP]
                                         └-- S2
                                             ├-- *dwi.nii.gz
                                             ├-- *dwi.bval
@@ -47,7 +47,7 @@ INPUT
                                             ├-- *rev_dwi.bval       (optional)  
                                             ├-- *rev_dwi.bvec       (optional)  
                                             ├-- *rev_b0.nii.gz      (optional) 
-                                            └-- *lesion.nii.gz      (optional)
+                                            └-- *lesion.nii.gz      (optional) [WIP]
 
         --atlas_directory                 Path to atlas folder containing:
                                                                                 atlas/
@@ -77,7 +77,7 @@ Processing profiles:
                                                     - Synthstrip no-csf (exclude csf from brain border): true
 
     -tumour                                     Tumour processing profile for surgical evaluation. [WIP]
-    
+
     -wm                                         White matter processing profile for surgical evaluation. [WIP]
 
     -tractoflow                                 Tractoflow processing profile for surgical evaluation. [WIP]

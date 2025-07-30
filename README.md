@@ -1,6 +1,6 @@
-# NF-SurgeryFlow
+# nf-surgeryFlow
 
-NF-SurgeryFlow is a Nextflow pipeline for processing neuroimaging data. This pipeline includes various preprocessing, reconstruction, tracking, and segmentation steps.
+nf-surgeryFlow is a Nextflow pipeline for processing neuroimaging data. This pipeline includes various preprocessing, reconstruction, tracking, and segmentation steps.
 
 ## Table of Contents
 - [NF-SurgeryFlow](#nf-surgeryflow)
@@ -17,7 +17,7 @@ NF-SurgeryFlow is a Nextflow pipeline for processing neuroimaging data. This pip
 
 ## Installation
 
-To install NF-SurgeryFlow, you need to have Nextflow and Docker installed. Follow these steps:
+To install nf-surgeryFlow, you need to have Nextflow and Docker installed. Follow these steps:
 
 1. Install Nextflow:
     ```sh
@@ -44,12 +44,12 @@ This pipeline is still under developpement, therefore has not been tested under 
 
 ### Input specification
 
-For complete usage instructions, please see the [documentation](/docs/usage.md). **nf-surgeryflow** aligns with the [BIDS](https://bids-specification.readthedocs.io/en/stable/) specification. To promote the use of standardized data formats and structures, **nf-surgeryflow** requires a BIDS-compliant folder as its input directories. We encourage users to validate their BIDS layout using the [bids-validator tool](https://hub.docker.com/r/bids/validator). The following example provides a BIDS structure for data containg an acquisition with a reverse phase-encoded B0 image.
+nf-surgeryflow takes the following inputs, passing the /path/to/root at the --input flag:
 
 ```bash
-             "        --input=/path/to/[input]             Input directory containing your subjects"
+             "        --input=/path/to/[root]             Input directory containing your subjects"
              ""
-             "                         [input]"
+             "                         [root]"
              "                           ├-- S1"
              "                           |   ├-- *dwi.nii.gz"
              "                           |   ├-- *dwi.bval"
