@@ -1,9 +1,9 @@
-# nf-surgeryFlow
+# nf-SurgeryFlow
 
-nf-surgeryFlow is a Nextflow pipeline for processing neuroimaging data. This pipeline includes various preprocessing, reconstruction, tracking, and segmentation steps.
+nf-SurgeryFlow is a Nextflow pipeline for processing neuroimaging data. This pipeline includes various preprocessing, reconstruction, tracking, and segmentation steps.
 
 ## Table of Contents
-- [NF-SurgeryFlow](#nf-surgeryflow)
+- [nf-SurgeryFlow](#nf-surgeryflow)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Installation](#installation)
@@ -17,7 +17,7 @@ nf-surgeryFlow is a Nextflow pipeline for processing neuroimaging data. This pip
 
 ## Installation
 
-To install nf-surgeryFlow, you need to have Nextflow and Docker installed. Follow these steps:
+To install nf-SurgeryFlow, you need to have Nextflow and Docker installed. Follow these steps:
 
 1. Install Nextflow:
     ```sh
@@ -38,6 +38,7 @@ To install nf-surgeryFlow, you need to have Nextflow and Docker installed. Follo
 This pipeline is still under developpement, therefore has not been tested under all circomstances. Here are the main elements to know to be able to run it:
 - Some modules use Freesurfer tools, which require pointing to a valid Freesurfer license. This license should be provided by the user and passed through when calling nf-surgeryflow. Refer to [this page](https://surfer.nmr.mgh.harvard.edu/registration.html).
 - BundleSeg uses an atlas-based virtual dissection method, therefore needs a white matter bundles atlas. You can use yours or use [this one](https://zenodo.org/records/10103446) 
+- We highly recommend using <-profile docker> or <-profile apptainer>, , as it controls the version of the software used and avoids the installation of all the required softwares.
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow.
