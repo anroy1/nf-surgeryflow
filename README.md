@@ -76,9 +76,11 @@ For complete usage instructions, please see the [documentation](/docs/usage.md).
 
 **Configurations profiles**
 
-1. `-profile docker`: Each process will be run using docker containers.
+1. `-profile docker`: Each process will be run using docker containers (*Recommended*).
 2. `-profile apptainer` or `-profile singularity`: Each process will be run using apptainer/singularity images.
 3. `-profile use-gpu`: Some processes use GPU acceleration [WIP]
+4. `-profile dicom`: Convert output back to DICOM [WIP]
+
 
 **Processing profiles**
 

@@ -16,9 +16,7 @@
 
 - [BundleSeg] (https://github.com/scilus/rbx_flow)
  
-> St-Onge, Etienne, Kurt G. Schilling, and Francois Rheault. "BundleSeg: A versatile, 
-reliable and reproducible approach to white matter bundle segmentation." International 
-Workshop on Computational Diffusion MRI. Cham: Springer Nature Switzerland, (2023)
+> St-Onge, Etienne, Kurt G. Schilling, and Francois Rheault. "BundleSeg: A versatile, reliable and reproducible approach to white matter bundle segmentation." International Workshop on Computational Diffusion MRI. Cham: Springer Nature Switzerland, (2023)
 
 > Rheault, Francois. Analyse et reconstruction de faisceaux de la matière blanche.
 page 137-170, (2020), https://savoirs.usherbrooke.ca/handle/11143/17255
@@ -44,6 +42,19 @@ page 137-170, (2020), https://savoirs.usherbrooke.ca/handle/11143/17255
 - [FreeSurfer](https://surfer.nmr.mgh.harvard.edu/)
 
 > Fischl, B. (2012). FreeSurfer. NeuroImage, 62(2), 774–781. https://doi.org/10.1016/j.neuroimage.2012.01.021
+
+- [Synthmorph](https://martinos.org/malte/synthmorph/)
+
+> Anatomy-specific acquisition-agnostic affine registration learned from fictitious images. Hoffmann M, Hoopes A, Fischl B*, Dalca AV*. SPIE Medical Imaging: Image Processing, 12464, p 1246402, 2023 
+> SynthMorph: learning contrast-invariant registration without acquired images. Hoffmann M, Billot B, Greve DN, Iglesias JE, Fischl B, Dalca AV. IEEE Transactions on Medical Imaging (TMI), 41 (3), pp 543-558, 2022 
+
+- [Synthstrip] (https://surfer.nmr.mgh.harvard.edu/docs/synthstrip/)
+
+> SynthStrip: Skull-Stripping for Any Brain Image. Andrew Hoopes, Jocelyn S. Mora, Adrian V. Dalca, Bruce Fischl*, Malte Hoffmann* (*equal contribution). NeuroImage 260, 2022, 119474
+
+- [Synthseg] (https://github.com/BBillot/SynthSeg)
+
+> SynthSeg: Segmentation of brain MRI scans of any contrast and resolution without retraining. B. Billot, D.N. Greve, O. Puonti, A. Thielscher, K. Van Leemput, B. Fischl, A.V. Dalca, J.E. Iglesias. Medical Image Analysis (2023) 
 
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
 
