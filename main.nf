@@ -1,46 +1,16 @@
 #!/usr/bin/env nextflow
 
-import groovy.text.SimpleTemplateEngine
-
 //BIDS
-include {   IO_READBIDS                                               } from './modules/nf-neuro/io/readbids/main' 
+include { IO_READBIDS       } from './modules/nf-neuro/io/readbids/main' 
 
-// PREPROCESSING
-include {   PREPROC_DWI                                               } from './subworkflows/nf-neuro/preproc_dwi/main'
-include {   PREPROC_T1                                                } from './subworkflows/nf-neuro/preproc_t1/main'
-include {   REGISTRATION as T1_REGISTRATION                           } from './subworkflows/nf-neuro/registration/main'
-include {   REGISTRATION_CONVERT                                      } from './modules/nf-neuro/registration/convert/main'
-include {   REGISTRATION_ANTSAPPLYTRANSFORMS as TRANSFORM_WMPARC      } from './modules/nf-neuro/registration/antsapplytransforms/main'
-include {   REGISTRATION_ANTSAPPLYTRANSFORMS as TRANSFORM_APARC_ASEG  } from './modules/nf-neuro/registration/antsapplytransforms/main'
-include {   ANATOMICAL_SEGMENTATION                                   } from './subworkflows/nf-neuro/anatomical_segmentation/main'
-
-// RECONSTRUCTION
-include {   RECONST_FRF        } from './modules/nf-neuro/reconst/frf/main'
-include {   RECONST_MEANFRF    } from './modules/nf-neuro/reconst/meanfrf/main'
-include {   RECONST_DTIMETRICS } from './modules/nf-neuro/reconst/dtimetrics/main'
-include {   RECONST_FODF       } from './modules/nf-neuro/reconst/fodf/main'
-
-// TRACKING
-include {   TRACKING_PFTTRACKING   } from './modules/nf-neuro/tracking/pfttracking/main'
-include {   TRACKING_LOCALTRACKING } from './modules/nf-neuro/tracking/localtracking/main'
+// TRACTOFLOW
+include { TRACTOFLOW        } from './subworkflows/nf-neuro/tractoflow/main'
 
 // BUNDLESEG
-include { BUNDLE_SEG } from './subworkflows/nf-neuro/bundle_seg/main'
+include { BUNDLE_SEG        } from './subworkflows/nf-neuro/bundle_seg/main'
 
 // NII TO DICOM
-include { NII_TO_DICOM } from './subworkflows/local/nii_to_dicom/main'
-
-def helpMessage() {
-    def usage_text = new File("${baseDir}/USAGE").text
-    def binding = [params: params]
-    def engine = new SimpleTemplateEngine()
-    return engine.createTemplate(usage_text).make(binding)
-}
-
-if ( params.help || !params.input) {
-    log.info helpMessage().toString
-    exit 0
-}
+include { NII_TO_DICOM      } from './subworkflows/local/nii_to_dicom/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,172 +80,62 @@ workflow {
         ? Channel.fromPath(params.fs_license, checkIfExists: true, followLinks: true)
         : Channel.empty().ifEmpty { error "No license file path provided. Please specify the path using --fs_license parameter." }
 
-    /* PREPROCESSING */
-
-    //
-    // SUBWORKFLOW: Run PREPROC_DWI
-    //
-    PREPROC_DWI(
-        inputs.dwi,         // channel: [ val(meta), dwi, bval, bvec ]
-        inputs.rev_dwi,     // channel: [ val(meta), rev-dwi, bval, bvec ], optional
-        inputs.b0,          // Channel: [ val(meta), b0 ], optional
-        inputs.rev_b0,      // channel: [ val(meta), rev-b0 ], optional
-        inputs.topup        // channel: [ 'topup.cnf' ], optional
-    )
-
-    //
-    // SUBWORKFLOW: Run PREPROC_T1
-    //
-
-    ch_t1_meta = inputs.t1.map{ it[0] }
-    PREPROC_T1(
-        inputs.t1,                              // channel: [ val(meta), image ]
-        ch_t1_meta.combine(ch_bet_template),    // channel: [ val(meta), template ]                              , optional
-        ch_t1_meta.combine(ch_bet_probability), // channel: [ val(meta), probability-map, mask, initial-affine ] , optional
-        Channel.empty(),                        // channel: [ val(meta), mask ]                                  , optional
-        Channel.empty(),                        // channel: [ val(meta), ref, ref-mask ]                         , optional
-        Channel.empty(),                        // channel: [ val(meta), ref ]                                   , optional
-        Channel.empty()                         // channel: [ val(meta), weights ]                               , optional
-    )
-
-    
-
-    //
-    // MODULE: Run RECONST_DTIMETRICS
-    //
-
-    ch_dti_metrics = PREPROC_DWI.out.dwi
-        .join(PREPROC_DWI.out.bval)
-        .join(PREPROC_DWI.out.bvec)
-        .join(PREPROC_DWI.out.b0_mask)
-
-    RECONST_DTIMETRICS( ch_dti_metrics )
-
-    //
-    // SUBWORKFLOW: Run REGISTRATION
-    //
-    T1_REGISTRATION(
-        PREPROC_T1.out.t1_final,        // channel: [ val(meta), [ image ] ]
-        PREPROC_DWI.out.b0,             // channel: [ val(meta), [ ref ] ]
-        RECONST_DTIMETRICS.out.fa,      // channel: [ val(meta), [ metric ] ], optional
-        PREPROC_T1.out.mask_final,      // channel: [ val(meta), [ mask ] ], optional
-        Channel.empty(),                // channel: [ val(meta), [ flo_segmentation ] ], optional
-        Channel.empty()                 // channel: [ val(meta), [ ref_segmentation ] ], optional
-    )
-
-    /* SEGMENTATION */
-
-    //
-    // SUBWORKFLOW: Run ANATOMICAL_SEGMENTATION
-    //
-    ANATOMICAL_SEGMENTATION(
-        T1_REGISTRATION.out.image_warped,   // channel: [ val(meta), [ image ] ]
-            Channel.empty(),                // channel: [ val(meta), [ aparc_aseg, wmparc ] ], optional
-            inputs.lesion,                  // channel: [ val(meta), [ lesion ] ], optional
-            ch_fs_license                   // channel: [ val[meta], [ fs_license ] ], optional
-    )
-
-    //
-    // MODULE: Run RECONST/FRF
-    //
-    ch_reconst_frf = PREPROC_DWI.out.dwi
-        .join(PREPROC_DWI.out.bval)
-        .join(PREPROC_DWI.out.bvec)
-        .join(PREPROC_DWI.out.b0_mask)
-        .join(ANATOMICAL_SEGMENTATION.out.wm_mask)
-        .join(ANATOMICAL_SEGMENTATION.out.gm_mask)
-        .join(ANATOMICAL_SEGMENTATION.out.csf_mask)
-
-    RECONST_FRF( ch_reconst_frf )
-
-    /* Run fiber response averaging over subjects */
-    ch_single_frf = RECONST_FRF.out.frf
-        .map{ it + [[], []] }
-
-    ch_fiber_response = RECONST_FRF.out.wm_frf
-        .join(RECONST_FRF.out.gm_frf)
-        .join(RECONST_FRF.out.csf_frf)
-        .mix(ch_single_frf)
-    if ( params.run_mean_frf ) {
-        RECONST_MEANFRF( RECONST_FRF.out.frf.map{ it[1] }.flatten() )
-        ch_fiber_response = RECONST_FRF.out.map{ it[0] }
-            .combine( RECONST_MEANFRF.out.meanfrf )
-    }
-
-    //
-    // MODULE: Run RECONST/FODF
-    //
-    ch_reconst_fodf = PREPROC_DWI.out.dwi
-        .join(PREPROC_DWI.out.bval)
-        .join(PREPROC_DWI.out.bvec)
-        .join(PREPROC_DWI.out.b0_mask)
-        .join(RECONST_DTIMETRICS.out.fa)
-        .join(RECONST_DTIMETRICS.out.md)
-        .join(ch_fiber_response)
-    RECONST_FODF( ch_reconst_fodf )
-
-    /* TRACKING */
-
     // Check for mutually exclusive tracking methods
     if (params.run_local_tracking && params.run_pft) {
         exit 1, "SurgeryFlow doesn't support running both tracking methods at the moment. Please select either 'run_local_tracking' or 'run_pft'."
     }
 
     // Check profile compatibility with parameters
-    if (params.profile.contains('tractoflow')&& (params.run_synthbet || params.run_synthbet || params.run_synthseg)) {
+    if (workflow.profile.contains('tractoflow') && (params.run_synthbet || params.run_synthbet || params.run_synthseg)) {
         exit 1, "The 'tractoflow' profile is incompatible with Freesurfer's synth tools."
     }
 
-    if (params.profile.contains('standard') && params.profile.contains('tumour')) {
+    if (workflow.profile.contains('standard') && workflow.profile.contains('tumour')) {
         exit 1, "You have selected 'standard' and 'tumour' profile. Select only one profile to avoid conflicts."
     }
 
-    if (params.profile.contains('use-gpu') && !params.run_local_tracking) {
+    if (workflow.profile.contains('use-gpu') && !params.run_local_tracking) {
         log.warn "Warning: You have selected 'use-gpu' profile, GPU acceleration is only applied to local tracking."
     }
-    if (params.profile.contains('wm') && (params.profile.contains('standard') || params.profile.contains('tumour'))) {
+    if (workflow.profile.contains('wm') && (workflow.profile.contains('standard') || workflow.profile.contains('tumour'))) {
         exit 1, "You have selected 'wm' profile, which is incompatible with 'standard' or 'tumour' profiles. 'Wm' uses white matter mask for seeding and seeding while 'standard' and 'tumour' profiles use FA thresholding mask for seeding and tracking."
     }
-    
-    // Initialize empty tractogram channel
-    ch_tractogram = Channel.empty()
 
-    //
-    // MODULE: Run TRACKING/PFTTRACKING
-    //
-    ch_pft_tracking = Channel.empty()
-    if ( params.run_pft ) {
-        ch_pft_tracking = ANATOMICAL_SEGMENTATION.out.wm_mask
-            .join(ANATOMICAL_SEGMENTATION.out.gm_mask)
-            .join(ANATOMICAL_SEGMENTATION.out.csf_mask)
-            .join(RECONST_FODF.out.fodf)
-            .join(RECONST_DTIMETRICS.out.fa)
-        TRACKING_PFTTRACKING( ch_pft_tracking )
-        
-        ch_tractogram = TRACKING_PFTTRACKING.out.trk
-    }
+    /* TRACTOFLOW */
 
-    //
-    // MODULE: Run TRACKING/LOCALTRACKING
-    //
-    ch_local_tracking = Channel.empty()
-    if ( params.run_local_tracking ) {
-        ch_local_tracking = ANATOMICAL_SEGMENTATION.out.wm_mask
-            .join(RECONST_FODF.out.fodf)
-            .join(RECONST_DTIMETRICS.out.fa)
-        TRACKING_LOCALTRACKING( ch_local_tracking )
-        
-        ch_tractogram = TRACKING_LOCALTRACKING.out.trk
-    }
+    TRACTOFLOW(
+        inputs.dwi,         // channel : [required] meta, dwi, bval, bvec
+        inputs.t1,          // channel : [required] meta, t1
+        inputs.b0,          // channel : [optional] meta, sbref
+        inputs.rev_dwi,     // channel : [optional] meta, rev_dwi, rev_bval, rev_bvec
+        inputs.rev_b0,      // channel : [optional] meta, rev_sbref
+        inputs.aparc_aseg,  // channel : [optional] meta, aparc_aseg
+        inputs.wmparc,      // channel : [optional] meta, wmparc
+        inputs.topup,       // channel : [optional] topup config file
+        ch_bet_template,    // channel : [optional] meta, bet_template
+        ch_bet_probability, // channel : [optional] meta, bet_probability_map
+        inputs.lesion,      // channel : [optional] meta, lesion_mask
+        ch_fs_license       // channel : [optional] meta, fs_license
+    )
 
     /* BUNDLE SEGMENTATION */
 
     //
     // SUBWORKFLOW: Run BUNDLE_SEG
     //
+
+if ( params.run_local_tracking) {
+
     BUNDLE_SEG( 
-        RECONST_DTIMETRICS.out.fa,  // channel: [ val(meta), [ fa ] ]
-        ch_tractogram)              // channel: [ val(meta), [ tractogram ] ]
+        TRACTOFLOW.out.dti_fa,              // channel: [ val(meta), [ fa ] ]
+        TRACTOFLOW.out.local_tractogram)    // channel: [ val(meta), [ tractogram ] ]
+}
+
+if ( params.run_pft ) {
+    BUNDLE_SEG( 
+        TRACTOFLOW.out.dti_fa,              // channel: [ val(meta), [ fa ] ]
+        TRACTOFLOW.out.pft_tractogram)      // channel: [ val(meta), [ tractogram ] ]
+}
 
     /* NIFTI TO DICOM CONVERSION */
 
