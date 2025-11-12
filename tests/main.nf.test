@@ -1,0 +1,98 @@
+
+nextflow_workflow {
+
+    name "Test Subworkflow TRACTOFLOW"
+    script "../main.nf"
+    config "../nextflow.config"
+    workflow "NF-SURGERYFLOW"
+
+    tag "workflows"
+    tag "workflows_nf-surgeryflow"
+    
+    tag "subworkflows"
+    tag "subworkflows_nfneuro"
+    tag "subworkflows/tractoflow"
+
+    tag "load_test_data"
+    tag "subworkflows/anatomical_segmentation"
+    tag "subworkflows/preproc_dwi"
+    tag "subworkflows/preproc_t1"
+    tag "subworkflows/registration"
+
+    tag "reconst/dtimetrics"
+    tag "reconst/frf"
+    tag "reconst/fodf"
+    tag "reconst/meanfrf"
+    tag "registration/antsapplytransforms"
+    tag "tracking/localtracking"
+    tag "tracking/pfttracking"
+
+    tag "stub"
+    options "-stub-run"
+
+    setup {
+        run("LOAD_TEST_DATA", alias: "LOAD_DATA") {
+            script "../../load_test_data/main.nf"
+            process {
+                """
+                input[0] = Channel.from( [ "antsbet.zip", "raw_DWIss1000-dir32.zip", "raw_T1w.zip" ] )
+                input[1] = "test.load-test-data"
+                """
+            }
+        }
+    }
+
+    test("base - localtracking no rev") {
+        when {
+            params {
+                run_pft  = false
+                run_local_tracking = true
+            }
+            workflow {
+                """
+                ch_split_test_data = LOAD_DATA.out.test_data_directory
+                    .branch{
+                        dwi: it.simpleName == "raw_DWIss1000-dir32"
+                        t1w: it.simpleName == "raw_T1w"
+                    }
+                input[0] = ch_split_test_data.dwi.map{
+                    test_data_directory -> [
+                        [ id:'test' ],
+                        file("\${test_data_directory}/dwi.nii.gz"),
+                        file("\${test_data_directory}/dwi.bval"),
+                        file("\${test_data_directory}/dwi.bvec")
+                    ]}
+                input[1] = ch_split_test_data.t1w.map{
+                    test_data_directory -> [
+                        [ id:'test' ],
+                        file("\${test_data_directory}/T1w.nii.gz")
+                    ]}
+                input[2] = Channel.empty()
+                input[3] = Channel.empty()
+                input[4] = Channel.empty()
+                input[5] = Channel.empty()
+                input[6] = Channel.empty()
+                input[7] = Channel.empty()
+                input[8] = Channel.empty()
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success},
+                { assert snapshot(
+                    workflow.out
+                        .findAll{ channel -> !channel.key.isInteger() && channel.value  }
+                        .collectEntries{ channel ->
+                            [(channel.key): ["versions"].contains(channel.key)
+                                ? channel.value
+                                : channel.value.collect{ subject ->
+                                    [ subject[0] ] + subject[1..-1].flatten().collect{ entry -> entry ? file(entry).name : "" }
+                            } ]
+                        }
+                ).match() }
+            )
+        }
+    }
+}

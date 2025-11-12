@@ -1,2 +1,5 @@
 
 repository_type: pipeline
+modules_repositories:
+  nf-neuro:
+    - https://github.com/nf-neuro/modules.git
