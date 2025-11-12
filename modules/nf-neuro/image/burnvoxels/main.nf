@@ -3,8 +3,8 @@ process IMAGE_BURNVOXELS {
     label 'process_single'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://scil.usherbrooke.ca/containers/scilus_2.0.2.sif':
-        'scilus/scilus:2.0.2' }"
+        'https://scil.usherbrooke.ca/containers/scilus_2.1.1.sif':
+        'scilus/scilus:2.1.1' }"
 
     input:
     tuple val(meta), path(masks), path(anat)
