@@ -42,6 +42,7 @@ workflow TRACTOFLOW {
         ch_bet_template     // channel : [optional] meta, bet_template
         ch_bet_probability  // channel : [optional] meta, bet_probability
         ch_lesion_mask      // channel : [optional] meta, lesion_mask
+        ch_fs_license       // channel : [optional] path(fs_license)
     main:
 
         ch_versions = Channel.empty()
@@ -74,7 +75,8 @@ workflow TRACTOFLOW {
             Channel.empty(),
             Channel.empty(),
             Channel.empty(),
-            Channel.empty()
+            Channel.empty(),
+            ch_fs_license
         )
         ch_versions = ch_versions.mix(PREPROC_T1.out.versions.first())
 
@@ -102,7 +104,8 @@ workflow TRACTOFLOW {
             Channel.empty(),
             Channel.empty(),
             Channel.empty(),
-            Channel.empty()
+            Channel.empty(),
+            ch_fs_license
         )
         ch_versions = ch_versions.mix(T1_REGISTRATION.out.versions.first())
         ch_mqc_files = ch_mqc_files.mix(T1_REGISTRATION.out.mqc)
@@ -149,7 +152,7 @@ workflow TRACTOFLOW {
             TRANSFORM_WMPARC.out.warped_image
                 .join(TRANSFORM_APARC_ASEG.out.warped_image),
             TRANSFORM_LESION_MASK.out.warped_image,
-            Channel.empty()
+            ch_fs_license
         )
         ch_versions = ch_versions.mix(ANATOMICAL_SEGMENTATION.out.versions.first())
         ch_global_mqc_files = ch_global_mqc_files.mix(ANATOMICAL_SEGMENTATION.out.qc_score)

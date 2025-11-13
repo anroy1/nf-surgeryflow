@@ -6,21 +6,19 @@ include { IO_NII2DCM } from '../../../modules/nf-neuro/io/nii2dcm/main'
 workflow NII_TO_DICOM {
 
     take:
-    ch_t1_native    // channel: [ val(meta), [ t1_native ] ]
-    ch_affine       // channel: [ val(meta), [ affine ] ]
-    ch_warp         // channel: [ val(meta), [ warp ] ]
-    ch_bundles      // channel: [ val(meta), [ bundles ] ]
-    ch_dicom        // channel: [ val(meta), [ dicom ] ]
+    ch_t1_native    // channel: meta, t1
+    ch_transforms   // channel: meta, anatomical_to_dwi
+    ch_bundles      // channel: meta, bundles
+    ch_dicom        // channel: meta, dicom
 
     main:
 
     ch_versions = Channel.empty()
 
     ch_register_bundles = ch_t1_native
-        .join(ch_affine)
+        .join(ch_transforms)
         .join(ch_bundles)
-        .map{ it + [[]] }
-        .join(ch_warp)
+        .map { meta, t1, transforms, bundles -> [ meta, t1, transforms[1], bundles, [], transforms[0] ] }
     REGISTRATION_TRACTOGRAM(ch_register_bundles)
     ch_versions = ch_versions.mix(REGISTRATION_TRACTOGRAM.out.versions.first())
 
@@ -47,4 +45,3 @@ workflow NII_TO_DICOM {
 
     versions = ch_versions                      // channel: [ versions.yml ]
 }
-
