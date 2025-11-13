@@ -115,7 +115,7 @@ workflow {
         ch_bet_template,    // channel : [optional] meta, bet_template
         ch_bet_probability, // channel : [optional] meta, bet_probability_map
         inputs.lesion,      // channel : [optional] meta, lesion_mask
-        ch_fs_license       // channel : [optional] meta, fs_license
+        ch_fs_license       // channel : path(fs_license)
     )
 
     /* BUNDLE SEGMENTATION */
@@ -128,13 +128,17 @@ if ( params.run_local_tracking) {
 
     BUNDLE_SEG( 
         TRACTOFLOW.out.dti_fa,              // channel: [ val(meta), [ fa ] ]
-        TRACTOFLOW.out.local_tractogram)    // channel: [ val(meta), [ tractogram ] ]
+        TRACTOFLOW.out.local_tractogram,    // channel: [ val(meta), [ tractogram ] ]
+        ch_fs_license
+        )
 }
 
 if ( params.run_pft ) {
     BUNDLE_SEG( 
         TRACTOFLOW.out.dti_fa,              // channel: [ val(meta), [ fa ] ]
-        TRACTOFLOW.out.pft_tractogram)      // channel: [ val(meta), [ tractogram ] ]
+        TRACTOFLOW.out.pft_tractogram,      // channel: [ val(meta), [ tractogram ] ]
+        ch_fs_license
+        )     
 }
 
     /* NIFTI TO DICOM CONVERSION */
@@ -146,7 +150,7 @@ if ( params.run_pft ) {
     //
 
         NII_TO_DICOM(
-            TRACTOFLOW.out.t1,
+            TRACTOFLOW.out.t1,                              // channel: [ val(meta), [ t1 ] ]
             TRACTOFLOW.out.anatomical_to_diffusion,         // channel: [ val(meta), [ warp ], [ affine ] ]
             BUNDLE_SEG.out.bundles,                         // channel: [ val(meta), [ bundles ] ]
             Channel.empty()                                 // channel: [ val(meta), [ dicom ] ], optional

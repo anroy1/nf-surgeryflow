@@ -2,6 +2,8 @@ include { BUNDLE_RECOGNIZE  } from '../../../modules/nf-neuro/bundle/recognize/m
 
 include { REGISTRATION } from '../registration/main'
 
+
+
 def fetch_bundleseg_atlas(atlasUrl, configUrl, dest) {
 
     def atlas = new File("$dest/atlas.zip").withOutputStream{ out ->
@@ -47,7 +49,7 @@ workflow BUNDLE_SEG {
     take:
         ch_fa                   // channel: [ val(meta), [ fa ] ]
         ch_tractogram           // channel: [ val(meta), [ tractogram ] ]
-        ch_freesurfer_license   // channel: [ val(meta), path(fs_license) ]
+        ch_freesurfer_license   // channel: path(fs_license)
     main:
         if ( params.run_easyreg ) error "The BUNDLE_SEG workflow does not support the easyreg registration method."
         if ( params.run_synthmorph ) {

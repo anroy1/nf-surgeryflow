@@ -75,8 +75,7 @@ workflow TRACTOFLOW {
             Channel.empty(),
             Channel.empty(),
             Channel.empty(),
-            Channel.empty(),
-            ch_fs_license
+            Channel.empty()
         )
         ch_versions = ch_versions.mix(PREPROC_T1.out.versions.first())
 
@@ -101,7 +100,6 @@ workflow TRACTOFLOW {
             PREPROC_DWI.out.b0,
             PREPROC_T1.out.t1_final,
             RECONST_DTIMETRICS.out.fa,
-            Channel.empty(),
             Channel.empty(),
             Channel.empty(),
             Channel.empty(),

@@ -6,7 +6,7 @@ Changes in 'tractoflow/main.nf':
          ch_bet_template     // channel : [optional] meta, bet_template
          ch_bet_probability  // channel : [optional] meta, bet_probability
          ch_lesion_mask      // channel : [optional] meta, lesion_mask
-+        ch_fs_license       // channel : [optional] meta, fs_license
++        ch_fs_license       // channel : [optional] path(fs_license)
      main:
  
          ch_versions = Channel.empty()
