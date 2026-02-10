@@ -2,7 +2,7 @@ process BUNDLE_RECOGNIZE {
     tag "$meta.id"
     label 'process_high'
 
-    container "scilus/scilpy:2.2.0_cpu"
+    container "scilus/scilus:2.2.0"
 
     input:
         tuple val(meta), path(tractograms), path(transform), path(config), path(directory)
@@ -27,10 +27,13 @@ process BUNDLE_RECOGNIZE {
         ConvertTransformFile 3 $transform transform.mat --convertToAffineType \
             && transform="transform.mat" \
             || echo "TXT transform file conversion failed, using original file."
+    else
+        echo "Using provided original transform file."
+        transform="$transform"      
     fi
 
     mkdir recobundles/
-    scil_tractogram_segment_with_bundleseg ${tractograms} ${config} ${directory}/ ${transform} --inverse --out_dir recobundles/ \
+    scil_tractogram_segment_with_bundleseg ${tractograms} ${config} ${directory}/ "\${transform}" --inverse --out_dir recobundles/ \
         -v DEBUG $minimal_vote_ratio $seed $rbx_processes
 
     for bundle_file in recobundles/*.trk; do

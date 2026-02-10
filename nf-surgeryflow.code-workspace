@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+    ],
+    "settings": {
+        "python.analysis.autoFormatStrings": true,
+        "git.allowForcePush": true,
+        "nextflow.files.exclude": [
+            ".git",
+            ".nf-test",
+            "work",
+            ".venv",
+            ".nextflow",
+            "node_modules",
+            "tests/.runs"
+        ],
+        "nextflow.formatting.harshilAlignment": true,
+        "nextflow.debug": true
+    }
+}

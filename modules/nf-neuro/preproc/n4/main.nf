@@ -100,7 +100,7 @@ process PREPROC_N4 {
             ${prefix}__image_n4.nii.gz \
             -bias bias_field.nii.gz \
             -ants.b [\$bspline,3] \
-            -ants.c [\$iterations,1e-6] \
+            -ants.c [300x150x75x50,1e-6] \
             -ants.s $shrink_factor \
             -fslgrad $bvec $bval \
             $dwi_mask \
@@ -109,7 +109,7 @@ process PREPROC_N4 {
     else
         N4BiasFieldCorrection -i $image\
             -o [${prefix}__image_n4.nii.gz, bias_field.nii.gz]\
-            -c [\$iterations, 1e-6] -v 0\
+            -c [300x150x75x50, 1e-6] -v 1\
             $anat_mask\
             -b [\$bspline, 3] \
             -s $shrink_factor

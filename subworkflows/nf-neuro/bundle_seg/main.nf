@@ -1,6 +1,6 @@
 include { BUNDLE_RECOGNIZE  } from '../../../modules/nf-neuro/bundle/recognize/main'
-
 include { REGISTRATION } from '../registration/main'
+include { REGISTRATION_TRACTOGRAM as BUNDLE_REGISTER    } from '../../../modules/nf-neuro/registration/tractogram/main'
 
 
 
@@ -98,14 +98,33 @@ workflow BUNDLE_SEG {
 
         // ** Perform bundle recognition and segmentation ** //
         ch_recognize_bundle = ch_tractogram
-            .join(REGISTRATION.out.forward_affine)
+            .join(REGISTRATION.out.backward_affine)
             .combine(ch_atlas_config)
             .combine(ch_atlas_average)
 
         BUNDLE_RECOGNIZE ( ch_recognize_bundle )
         ch_versions = ch_versions.mix(BUNDLE_RECOGNIZE.out.versions.first())
+
+        if ( params.bundles_mni ) {
+            ch_register_mni = REGISTRATION.out.backward_affine
+                .join(BUNDLE_RECOGNIZE.out.bundles)
+                .join(ch_fa)
+                .join(ch_atlas_anat)
+                .map{ meta, backward_affine, bundles, fa, atlas ->
+                    return [meta, atlas, backward_affine, bundles, fa, [] ]
+                }
+
+            BUNDLE_REGISTER ( ch_register_mni )
+            ch_versions = ch_versions.mix(BUNDLE_REGISTER.out.versions.first())
+
+            ch_bundles_mni = BUNDLE_REGISTER.out.tractogram
+        }
+        
+
     emit:
         bundles = BUNDLE_RECOGNIZE.out.bundles              // channel: [ val(meta), [ bundles ] ]
+        bundles_mni = ch_bundles_mni                        // channel: [ val(meta), [ bundles_mni ] ]
+
         mqc = ch_mqc                                        // channel: [ *mqc.* ]
         versions = ch_versions                              // channel: [ versions.yml ]
 }
