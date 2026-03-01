@@ -1,5 +1,5 @@
 include { BUNDLE_RECOGNIZE  } from '../../../modules/nf-neuro/bundle/recognize/main'
-include { REGISTRATION } from '../registration/main'
+include { REGISTRATION } from '../registration/main' addParams( run_synthmorph: false )
 include { REGISTRATION_TRACTOGRAM as BUNDLE_REGISTER    } from '../../../modules/nf-neuro/registration/tractogram/main'
 
 
@@ -85,8 +85,8 @@ workflow BUNDLE_SEG {
             .map{ meta, _fa, anat -> [meta, anat] }
 
         REGISTRATION(
-            ch_atlas_anat,
             ch_fa,
+            ch_atlas_anat,
             Channel.empty(),
             Channel.empty(),
             Channel.empty(),
