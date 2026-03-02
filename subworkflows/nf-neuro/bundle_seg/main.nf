@@ -85,8 +85,8 @@ workflow BUNDLE_SEG {
             .map{ meta, _fa, anat -> [meta, anat] }
 
         REGISTRATION(
-            ch_fa,
             ch_atlas_anat,
+            ch_fa,
             Channel.empty(),
             Channel.empty(),
             Channel.empty(),
