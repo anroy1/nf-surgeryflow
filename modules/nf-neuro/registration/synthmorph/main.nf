@@ -114,6 +114,7 @@ process REGISTRATION_SYNTHMORPH {
         ((++i))
 
     done
+    # FORCING RERUN TODAY
 
     mv warped.nii.gz ${prefix}_warped.nii.gz
 

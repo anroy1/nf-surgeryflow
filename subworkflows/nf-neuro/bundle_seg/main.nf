@@ -118,6 +118,8 @@ workflow BUNDLE_SEG {
             ch_versions = ch_versions.mix(BUNDLE_REGISTER.out.versions.first())
 
             ch_bundles_mni = BUNDLE_REGISTER.out.tractogram
+        } else {
+            ch_bundles_mni = Channel.empty()
         }
         
 
